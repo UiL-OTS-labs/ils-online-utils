@@ -45,7 +45,7 @@ function swapItems<T>(stimuli: Array<T>, i1: number, i2: number) {
 // A constraint a key (string) that is allowed a number of times in a row
 type ConstraintMapping = { [key:string]: number};
 
-type StringToAnyMapping = {[key:string] : any};
+type StringToUnknownMapping = {[key:string] : unknown};
 
 /**
  * Checks whether an item may be appended to the randomized items
@@ -63,9 +63,9 @@ type StringToAnyMapping = {[key:string] : any};
  *         the constraints false otherwise.
  */
 function allowPushItem (
-    randomized: Array<StringToAnyMapping>,
+    randomized: Array<StringToUnknownMapping>,
     constraints: ConstraintMapping,
-    item: StringToAnyMapping
+    item: StringToUnknownMapping
 ) {
     for (const [key, max] of Object.entries(constraints)) {
         if (max < 1) {
@@ -126,10 +126,10 @@ function allowPushItem (
  * @return {Array|null} An array if the order is fixed, null otherwise
  */
 function fixOrderForConstraints(
-    stimuli: Array<StringToAnyMapping>,
-    constraints: ConstraintMapping): Array<StringToAnyMapping> | null
+    stimuli: Array<StringToUnknownMapping>,
+    constraints: ConstraintMapping): Array<StringToUnknownMapping> | null
 {
-    let output: Array<StringToAnyMapping> = [];
+    let output: Array<StringToUnknownMapping> = [];
     let copy = Array.from(stimuli)
     while(copy.length > 0) {
         let fitting = copy.findIndex((element) => {
@@ -160,11 +160,11 @@ function fixOrderForConstraints(
  * failed, in which case an error will have been logged to the console
  */
 function randomizePrivate(
-    original_stimuli: Array<StringToAnyMapping>,
+    original_stimuli: Array<StringToUnknownMapping>,
     constraints: ConstraintMapping,
     nth_try: number,
     max_tries: number
-) : Array<StringToAnyMapping> | null {
+) : Array<StringToUnknownMapping> | null {
     if (max_tries < 1) {
         throw new RangeError("max_tries is < 1");
     }
@@ -230,10 +230,10 @@ function randomizePrivate(
  * failed, in which case an error will have been logged to the console
  */
 function randomizeStimuli (
-    original_stimuli : Array<StringToAnyMapping>,
+    original_stimuli : Array<StringToUnknownMapping>,
     max_same_type: number = 2,
     type_key:string = 'item_type'
-) : Array<StringToAnyMapping> | null {
+) : Array<StringToUnknownMapping> | null {
     let constraints = {[type_key] : max_same_type}; // ES6 dependency.
     return randomizePrivate(original_stimuli, constraints, 0, 10);
 }
@@ -255,10 +255,10 @@ function randomizeStimuli (
  * failed, in which case an error will have been logged to the console
  */
 function randomizeStimuliConstraints (
-    original_stimuli: Array<StringToAnyMapping>,
+    original_stimuli: Array<StringToUnknownMapping>,
     constraints = {'item_type' : 2},
     max_tries = 10
-) : Array<StringToAnyMapping> | null {
+) : Array<StringToUnknownMapping> | null {
     return randomizePrivate(original_stimuli, constraints, 0, max_tries);
 }
 
@@ -300,10 +300,10 @@ function randomShuffle<T> (original_stimuli: Array<T>) : Array<T> {
  * @return {null|Array.<Object>}
  */
 function randomShuffleConstraints (
-    original_stimuli: Array<StringToAnyMapping>,
+    original_stimuli: Array<StringToUnknownMapping>,
     constraints: ConstraintMapping = {},
     max_tries : number = 10
-) : Array<StringToAnyMapping> | null {
+) : Array<StringToUnknownMapping> | null {
     if (max_tries < 1) {
         throw new RangeError("max_tries is < 1");
     }
@@ -330,7 +330,7 @@ function randomShuffleConstraints (
  * @param constraints {Object}
  */
 function stimuliMeetConstraints (
-    stimuli: Array<StringToAnyMapping>,
+    stimuli: Array<StringToUnknownMapping>,
     constraints: ConstraintMapping
 ) : boolean {
     let valid = true;
