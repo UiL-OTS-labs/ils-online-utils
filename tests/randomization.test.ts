@@ -1,5 +1,7 @@
-import {expect, test} from 'vitest'
-import * as randomization from 'src/randomization.ts'
+import {expect, test, describe, it} from 'vitest';
+
+// Simplify this as import * from 'randomization.ts'
+import * as randomization from '../src/randomization'
 
 const ITEM_TYPES = [
     "filler",
@@ -71,32 +73,32 @@ describe('randomization', () => {
         expect(
             randomization.stimuliMeetConstraints(
                 impropper, {a : 1}
-            )).toBeFalse()
+            )).toBeFalsy()
 
         expect(
             randomization.stimuliMeetConstraints(
                 propper, {a : 1}
-            )).toBeTrue();
+            )).toBeTruthy();
 
         expect(
             randomization.stimuliMeetConstraints(
                 complex_improper, {a:1, b:1}
-            )).toBeFalse();
+            )).toBeFalsy();
 
         expect(
             randomization.stimuliMeetConstraints(
                 complex_proper, {a:1, b:1}
-            )).toBeTrue();
+            )).toBeTruthy();
 
         expect(
             randomization.stimuliMeetConstraints(
                 multiple_non_adjacent, {a:3}
-            )).toBeTrue();
+            )).toBeTruthy();
 
         expect(
             randomization.stimuliMeetConstraints(
                 multiple_non_adjacent, {a:2}
-            )).toBeFalse();
+            )).toBeFalsy();
     });
 
     it('should randomize without constraints', () => {
@@ -123,7 +125,7 @@ describe('randomization', () => {
         )
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTrue();
+        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
 
         constraints = {item_type: 2, color: 2, bi_state:10};
         shuffled = randomization.randomizeStimuliConstraints(
@@ -133,7 +135,7 @@ describe('randomization', () => {
 
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTrue();
+        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
     });
 
     it('should randomize with hard constraints', () => {
@@ -156,7 +158,7 @@ describe('randomization', () => {
         );
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTrue();
+        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
     });
 
     it('should not be slow', () => {
