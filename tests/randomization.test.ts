@@ -23,7 +23,7 @@ const IMBALANCED_BISTATE = [
     "false"
 ]
 
-function createStimuli(n) {
+function createStimuli(n) : object[] {
     let stimuli = [];
     const N = n;
     for (let i = 0; i < N; i++) {
@@ -41,11 +41,11 @@ function createStimuli(n) {
 
 describe('randomization', () => {
     it('should meet constraints', () => {
-        let impropper = [
+        let improper = [
             {a : 3},
             {a : 3}
         ];
-        let propper = [
+        let proper = [
             {a : 1},
             {a : 2}
         ];
@@ -72,12 +72,12 @@ describe('randomization', () => {
 
         expect(
             randomization.stimuliMeetConstraints(
-                impropper, {a : 1}
+                improper, {a : 1}
             )).toBeFalsy()
 
         expect(
             randomization.stimuliMeetConstraints(
-                propper, {a : 1}
+                proper, {a : 1}
             )).toBeTruthy();
 
         expect(
@@ -127,7 +127,7 @@ describe('randomization', () => {
         expect(shuffled).not.toBe(stimuli);
         expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
 
-        constraints = {item_type: 2, color: 2, bi_state:10};
+        constraints = {item_type: 2, color:2, bi_state:10};
         shuffled = randomization.randomizeStimuliConstraints(
             stimuli,
             constraints
