@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <h1>Randomization</h1>
+    <h2>Simple shuffle</h2>
+    <script type="module">
+      import {randomShuffle} from '/src/randomization.ts';
+      let a = [1,2,3,4,5,6,7,8,9];
+      let b = randomShuffle(a);
+      let p1 = document.createElement("P");
+      let p2 = document.createElement("p");
+
+      p1.innerText = "Before shuffle: " + a;
+      p2.innerText = "after shuffle: " + b;
+
+      document.body.append(p1);
+      document.body.append(p2);
+    </script>
+    
+    
+    <script type="module">
+      import {randomShuffleConstraints} from '/src/randomization.ts';
+      let a = [
+        {item_type: "a"},
+        {item_type: "a"},
+        {item_type: "a"},
+        {item_type: "b"},
+        {item_type: "b"},
+        {item_type: "b"},
+      ];
+      let constraints = {item_type: 1};
+      let b = randomShuffleConstraints(a, constraints);
+
+      let p1 = document.createElement("P");
+      let p2 = document.createElement("p");
+
+      p1.innerText = "Before shuffle: " + JSON.stringify(a);
+      p2.innerText = "after shuffle: " + JSON.stringify(b);
+
+      let h2 = document.createElement("H2")
+      h2.innerText = "Shuffle with constraints";
+
+      document.body.append(h2)
+      document.body.append(p1);
+      document.body.append(p2);
+    </script>
+  </body>
+</html>
