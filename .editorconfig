@@ -12,5 +12,5 @@ indent_size = 4
 # Use indent of 2 for json files (avoid conflict with tools using indent of 2)
 # most json files are not editted by hand
 
-[*.json]
+[*.{json,yml}]
 indent_size = 2
