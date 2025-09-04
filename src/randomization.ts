@@ -256,7 +256,7 @@ function randomizeStimuli<TItem extends ItemType> (
  */
 function randomizeStimuliConstraints<TItem extends ItemType> (
     original_stimuli: Array<TItem>,
-    constraints = {'item_type' : 2},
+    constraints: ConstraintMapping = {'item_type' : 2},
     max_tries = 10
 ) : Array<TItem> | null {
     return randomizePrivate(original_stimuli, constraints, 0, max_tries);
