@@ -1,6 +1,7 @@
 import {expect, test, describe, it} from 'vitest';
 
 // Simplify this as import * from 'randomization.ts'
+// using ... from "@/randomization.ts" work but linters are unhappy...
 import * as randomization from '../src/randomization'
 
 const ITEM_TYPES = [
@@ -23,8 +24,8 @@ const IMBALANCED_BISTATE = [
     "false"
 ]
 
-function createStimuli(n) : object[] {
-    let stimuli = [];
+function createStimuli(n) : Record<string, any>[] {
+    let stimuli: Array<Record<string, any>> = [];
     const N = n;
     for (let i = 0; i < N; i++) {
         stimuli.push (
@@ -117,25 +118,29 @@ describe('randomization', () => {
 
     it('should randomize with constraints', () => {
         let stimuli = createStimuli(100);
-        let constraints = {item_type : 3};
+        let constraints1 = {item_type : 3};
 
         let shuffled = randomization.randomizeStimuliConstraints(
             stimuli,
-            constraints
+            constraints1
         )
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
+        if (shuffled != null) {
+            expect(randomization.stimuliMeetConstraints(shuffled, constraints1)).toBeTruthy();
+        }
 
-        constraints = {item_type: 2, color:2, bi_state:10};
+        let constraints2 = {item_type: 2, color:2, bi_state:10};
         shuffled = randomization.randomizeStimuliConstraints(
             stimuli,
-            constraints
+            constraints2
         );
 
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
+        if (shuffled != null) {
+            expect(randomization.stimuliMeetConstraints(shuffled, constraints2)).toBeTruthy();
+        }
     });
 
     it('should randomize with hard constraints', () => {
@@ -158,7 +163,9 @@ describe('randomization', () => {
         );
         expect(shuffled).not.toBe(null);
         expect(shuffled).not.toBe(stimuli);
-        expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
+        if (shuffled !== null) {
+            expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
+        }
     });
 
     it('should not be slow', () => {
@@ -194,7 +201,7 @@ describe('randomization', () => {
             constraints,
         )).toBeLessThan(100);
 
-        constraints = {
+        let constraints2 = {
             item_type : 2,
             color : 2,
         };
@@ -202,13 +209,13 @@ describe('randomization', () => {
         expect(benchmarkFunction(
             niters,
             randomization.randomizeStimuliConstraints,
-            constraints,
+            constraints2,
         )).toBeLessThan(100);
 
         expect(benchmarkFunction(
             niters,
             randomization.randomShuffleConstraints,
-            constraints,
+            constraints2,
         )).toBeLessThan(100);
     });
 });
