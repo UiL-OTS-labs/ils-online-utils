@@ -1,221 +1,199 @@
-import {expect, test, describe, it} from 'vitest';
+import { expect, test, describe, it } from "vitest";
 
 // Simplify this as import * from 'randomization.ts'
 // using ... from "@/randomization.ts" work but linters are unhappy...
-import * as randomization from '../src/randomization'
+import * as randomization from "../src/randomization";
 
-const ITEM_TYPES = [
-    "filler",
-    "active",
-    "passive",
-    "distractor"
-];
+const ITEM_TYPES = ["filler", "active", "passive", "distractor"];
 
-const COLORS = [
-    "yellow",
-    "red",
-    "blue",
-    "green"
-];
+const COLORS = ["yellow", "red", "blue", "green"];
 
-const IMBALANCED_BISTATE = [
-    "true",
-    "true",
-    "false"
-]
+const IMBALANCED_BISTATE = ["true", "true", "false"];
 
-function createStimuli(n) : Record<string, any>[] {
-    let stimuli: Array<Record<string, any>> = [];
-    const N = n;
-    for (let i = 0; i < N; i++) {
-        stimuli.push (
-            {
-                id : i + 1,
-                item_type : ITEM_TYPES[i % ITEM_TYPES.length],
-                color : COLORS[Math.floor(i / (N / COLORS.length))],
-                bi_state : IMBALANCED_BISTATE[i % IMBALANCED_BISTATE.length]
-            }
-        );
-    }
-    return stimuli;
+function createStimuli(n): Record<string, any>[] {
+  let stimuli: Array<Record<string, any>> = [];
+  const N = n;
+  for (let i = 0; i < N; i++) {
+    stimuli.push({
+      id: i + 1,
+      item_type: ITEM_TYPES[i % ITEM_TYPES.length],
+      color: COLORS[Math.floor(i / (N / COLORS.length))],
+      bi_state: IMBALANCED_BISTATE[i % IMBALANCED_BISTATE.length],
+    });
+  }
+  return stimuli;
 }
 
-describe('randomization', () => {
-    it('should meet constraints', () => {
-        let improper = [
-            {a : 3},
-            {a : 3}
-        ];
-        let proper = [
-            {a : 1},
-            {a : 2}
-        ];
-        let complex_proper = [
-            {a : 1, b:2},
-            {a : 2, b:3},
-        ]
-        let complex_improper = [
-            {a : 1, b:2},
-            {a : 2, b:2},
-        ]
+describe("randomization", () => {
+  it("should meet constraints", () => {
+    let improper = [{ a: 3 }, { a: 3 }];
+    let proper = [{ a: 1 }, { a: 2 }];
+    let complex_proper = [
+      { a: 1, b: 2 },
+      { a: 2, b: 3 },
+    ];
+    let complex_improper = [
+      { a: 1, b: 2 },
+      { a: 2, b: 2 },
+    ];
 
-        // This catches errors when miscounting, it should be valid for {a:3}.
-        // This catches errors when miscounting, it should be invalid for {a:2}.
-        let multiple_non_adjacent = [
-            {a : 1},
-            {a : 1},
-            {a : 1},
-            {a : 0},
-            {a : 1},
-            {a : 1},
-            {a : 1},
-        ];
+    // This catches errors when miscounting, it should be valid for {a:3}.
+    // This catches errors when miscounting, it should be invalid for {a:2}.
+    let multiple_non_adjacent = [
+      { a: 1 },
+      { a: 1 },
+      { a: 1 },
+      { a: 0 },
+      { a: 1 },
+      { a: 1 },
+      { a: 1 },
+    ];
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                improper, {a : 1}
-            )).toBeFalsy()
+    expect(
+      randomization.stimuliMeetConstraints(improper, { a: 1 }),
+    ).toBeFalsy();
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                proper, {a : 1}
-            )).toBeTruthy();
+    expect(randomization.stimuliMeetConstraints(proper, { a: 1 })).toBeTruthy();
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                complex_improper, {a:1, b:1}
-            )).toBeFalsy();
+    expect(
+      randomization.stimuliMeetConstraints(complex_improper, { a: 1, b: 1 }),
+    ).toBeFalsy();
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                complex_proper, {a:1, b:1}
-            )).toBeTruthy();
+    expect(
+      randomization.stimuliMeetConstraints(complex_proper, { a: 1, b: 1 }),
+    ).toBeTruthy();
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                multiple_non_adjacent, {a:3}
-            )).toBeTruthy();
+    expect(
+      randomization.stimuliMeetConstraints(multiple_non_adjacent, { a: 3 }),
+    ).toBeTruthy();
 
-        expect(
-            randomization.stimuliMeetConstraints(
-                multiple_non_adjacent, {a:2}
-            )).toBeFalsy();
-    });
+    expect(
+      randomization.stimuliMeetConstraints(multiple_non_adjacent, { a: 2 }),
+    ).toBeFalsy();
+  });
 
-    it('should randomize without constraints', () => {
-        let stimuli = createStimuli(10);
-        // no constraints this is just a shuffle.
-        let shuffled = randomization.randomizeStimuliConstraints(
-            stimuli,
-            {}
-        );
+  it("should randomize without constraints", () => {
+    let stimuli = createStimuli(10);
+    // no constraints this is just a shuffle.
+    let shuffled = randomization.randomizeStimuliConstraints(stimuli, {});
 
-        // there is a 1 in 10! 10 * 9 .... * 1 chance that this fails.
-        expect(shuffled).not.toBe(stimuli);
-        shuffled = randomization.randomizeStimuli(stimuli, 10);
-        expect(shuffled).not.toBe(stimuli);
-    });
+    // there is a 1 in 10! 10 * 9 .... * 1 chance that this fails.
+    expect(shuffled).not.toBe(stimuli);
+    shuffled = randomization.randomizeStimuli(stimuli, 10);
+    expect(shuffled).not.toBe(stimuli);
+  });
 
-    it('should randomize with constraints', () => {
-        let stimuli = createStimuli(100);
-        let constraints1 = {item_type : 3};
+  it("should randomize with constraints", () => {
+    let stimuli = createStimuli(100);
+    let constraints1 = { item_type: 3 };
 
-        let shuffled = randomization.randomizeStimuliConstraints(
-            stimuli,
-            constraints1
-        )
-        expect(shuffled).not.toBe(null);
-        expect(shuffled).not.toBe(stimuli);
-        if (shuffled != null) {
-            expect(randomization.stimuliMeetConstraints(shuffled, constraints1)).toBeTruthy();
-        }
+    let shuffled = randomization.randomizeStimuliConstraints(
+      stimuli,
+      constraints1,
+    );
+    expect(shuffled).not.toBe(null);
+    expect(shuffled).not.toBe(stimuli);
+    if (shuffled != null) {
+      expect(
+        randomization.stimuliMeetConstraints(shuffled, constraints1),
+      ).toBeTruthy();
+    }
 
-        let constraints2 = {item_type: 2, color:2, bi_state:10};
-        shuffled = randomization.randomizeStimuliConstraints(
-            stimuli,
-            constraints2
-        );
+    let constraints2 = { item_type: 2, color: 2, bi_state: 10 };
+    shuffled = randomization.randomizeStimuliConstraints(stimuli, constraints2);
 
-        expect(shuffled).not.toBe(null);
-        expect(shuffled).not.toBe(stimuli);
-        if (shuffled != null) {
-            expect(randomization.stimuliMeetConstraints(shuffled, constraints2)).toBeTruthy();
-        }
-    });
+    expect(shuffled).not.toBe(null);
+    expect(shuffled).not.toBe(stimuli);
+    if (shuffled != null) {
+      expect(
+        randomization.stimuliMeetConstraints(shuffled, constraints2),
+      ).toBeTruthy();
+    }
+  });
 
-    it('should randomize with hard constraints', () => {
-        let stimuli = createStimuli(100);
-        let constraints = {
-            bi_state : 2,
-            item_type : 2,
-            color : 2
-        };
+  it("should randomize with hard constraints", () => {
+    let stimuli = createStimuli(100);
+    let constraints = {
+      bi_state: 2,
+      item_type: 2,
+      color: 2,
+    };
 
-        /*
-         * there must be a sequence true, true, false, ...., true, true, false out there
-         * that is not the input and meets the constraints, it's just unlikely that it
-         * will ever pop-up.
-         * The problem that occurs eventually is that the rules need to have a false, while
-         * there are only true values remaining.
-         */
-        let shuffled = randomization.randomShuffleConstraints (
-            stimuli, constraints, 100
-        );
-        expect(shuffled).not.toBe(null);
-        expect(shuffled).not.toBe(stimuli);
-        if (shuffled !== null) {
-            expect(randomization.stimuliMeetConstraints(shuffled, constraints)).toBeTruthy();
-        }
-    });
+    /*
+     * there must be a sequence true, true, false, ...., true, true, false out there
+     * that is not the input and meets the constraints, it's just unlikely that it
+     * will ever pop-up.
+     * The problem that occurs eventually is that the rules need to have a false, while
+     * there are only true values remaining.
+     */
+    let shuffled = randomization.randomShuffleConstraints(
+      stimuli,
+      constraints,
+      100,
+    );
+    expect(shuffled).not.toBe(null);
+    expect(shuffled).not.toBe(stimuli);
+    if (shuffled !== null) {
+      expect(
+        randomization.stimuliMeetConstraints(shuffled, constraints),
+      ).toBeTruthy();
+    }
+  });
 
-    it('should not be slow', () => {
-        let constraints = {item_type : 3};
-        const niters = 100;
-        const num_stim = 1000;
+  it("should not be slow", () => {
+    let constraints = { item_type: 3 };
+    const niters = 100;
+    const num_stim = 1000;
 
-        function benchmarkFunction(N, func, constraints) {
-            let stims = createStimuli(num_stim);
-            let tstart = performance.now();
-            for (let i = 0; i < N; i++) {
-                let shuffled = func(stims, constraints);
-            }
-            let tend = performance.now();
-            return ((tend - tstart) / N);
-        }
+    function benchmarkFunction(N, func, constraints) {
+      let stims = createStimuli(num_stim);
+      let tstart = performance.now();
+      for (let i = 0; i < N; i++) {
+        let shuffled = func(stims, constraints);
+      }
+      let tend = performance.now();
+      return (tend - tstart) / N;
+    }
 
-        expect(benchmarkFunction(
-            niters,
-            randomization.randomShuffle,
-            constraints,
-        )).toBeLessThan(100);
+    expect(
+      benchmarkFunction(niters, randomization.randomShuffle, constraints),
+    ).toBeLessThan(100);
 
-        expect(benchmarkFunction(
-            niters,
-            randomization.randomizeStimuliConstraints,
-            constraints,
-        )).toBeLessThan(100);
+    expect(
+      benchmarkFunction(
+        niters,
+        randomization.randomizeStimuliConstraints,
+        constraints,
+      ),
+    ).toBeLessThan(100);
 
-        expect(benchmarkFunction(
-            niters,
-            randomization.randomShuffleConstraints,
-            constraints,
-        )).toBeLessThan(100);
+    expect(
+      benchmarkFunction(
+        niters,
+        randomization.randomShuffleConstraints,
+        constraints,
+      ),
+    ).toBeLessThan(100);
 
-        let constraints2 = {
-            item_type : 2,
-            color : 2,
-        };
+    let constraints2 = {
+      item_type: 2,
+      color: 2,
+    };
 
-        expect(benchmarkFunction(
-            niters,
-            randomization.randomizeStimuliConstraints,
-            constraints2,
-        )).toBeLessThan(100);
+    expect(
+      benchmarkFunction(
+        niters,
+        randomization.randomizeStimuliConstraints,
+        constraints2,
+      ),
+    ).toBeLessThan(100);
 
-        expect(benchmarkFunction(
-            niters,
-            randomization.randomShuffleConstraints,
-            constraints2,
-        )).toBeLessThan(100);
-    });
+    expect(
+      benchmarkFunction(
+        niters,
+        randomization.randomShuffleConstraints,
+        constraints2,
+      ),
+    ).toBeLessThan(100);
+  });
 });

@@ -18,17 +18,16 @@
  */
 
 export {
-    randomizeStimuli,
-    randomizeStimuliConstraints,
-    randomShuffle,
-    randomShuffleConstraints,
-    stimuliMeetConstraints
+  randomizeStimuli,
+  randomizeStimuliConstraints,
+  randomShuffle,
+  randomShuffleConstraints,
+  stimuliMeetConstraints,
 };
 
 const NOT_SHUFFLED_ERROR_MSG =
-    "Unable to shuffle according to the constraints, " +
-    "perhaps it is an idea to loosen the constraints.";
-
+  "Unable to shuffle according to the constraints, " +
+  "perhaps it is an idea to loosen the constraints.";
 
 /**
  * Swaps two items in an array
@@ -37,9 +36,9 @@ const NOT_SHUFFLED_ERROR_MSG =
  * @param i2 a positive integer smaller than stimuli.length
  */
 function swapItems<T>(stimuli: Array<T>, i1: number, i2: number) {
-    let temp = stimuli[i1];
-    stimuli[i1] = stimuli[i2];
-    stimuli[i2] = temp;
+  let temp = stimuli[i1];
+  stimuli[i1] = stimuli[i2];
+  stimuli[i2] = temp;
 }
 
 // A constraint a key (string) that is allowed a number of times in a row
@@ -62,39 +61,36 @@ type ItemType = Record<string, unknown>;
  * @return true if the item may be appended to randomized without violating
  *         the constraints false otherwise.
  */
-function allowPushItem<TItem extends ItemType> (
-    randomized: Array<TItem>,
-    constraints: ConstraintMapping,
-    item: TItem
+function allowPushItem<TItem extends ItemType>(
+  randomized: Array<TItem>,
+  constraints: ConstraintMapping,
+  item: TItem,
 ) {
-    for (const [key, max] of Object.entries(constraints)) {
-        if (max < 1) {
-            throw new RangeError(
-                "max is < 1; it's impossible to fit less than one repeating items"
-            );
-        }
-        let value: any = item[key];
-        if (value === undefined) {
-            throw ReferenceError(
-                `There is no key "${key}" in item "${item}"`
-            );
-        }
-
-        // Select the relevant items, if max tells only 3 items are
-        // allowed in a row, it only makes sense to look at those
-        let selection = randomized.slice(-max);
-        // Push the item that we want to append to the selection
-        selection.push(item);
-
-        let count = 0;
-        selection.forEach(stimulus => count += Number(stimulus[key] === value));
-
-        // max items are allowed in a row, hence we should test whether
-        // the count is more than max. If so reject the new item.
-        if (count > max)
-            return false;
+  for (const [key, max] of Object.entries(constraints)) {
+    if (max < 1) {
+      throw new RangeError(
+        "max is < 1; it's impossible to fit less than one repeating items",
+      );
     }
-    return true;
+    let value: any = item[key];
+    if (value === undefined) {
+      throw ReferenceError(`There is no key "${key}" in item "${item}"`);
+    }
+
+    // Select the relevant items, if max tells only 3 items are
+    // allowed in a row, it only makes sense to look at those
+    let selection = randomized.slice(-max);
+    // Push the item that we want to append to the selection
+    selection.push(item);
+
+    let count = 0;
+    selection.forEach((stimulus) => (count += Number(stimulus[key] === value)));
+
+    // max items are allowed in a row, hence we should test whether
+    // the count is more than max. If so reject the new item.
+    if (count > max) return false;
+  }
+  return true;
 }
 
 /**
@@ -126,24 +122,23 @@ function allowPushItem<TItem extends ItemType> (
  * @return {Array|null} An array if the order is fixed, null otherwise
  */
 function fixOrderForConstraints<TItem extends ItemType>(
-    stimuli: Array<TItem>,
-    constraints: ConstraintMapping): Array<TItem> | null
-{
-    let output: Array<TItem> = [];
-    let copy = Array.from(stimuli)
-    while(copy.length > 0) {
-        let fitting = copy.findIndex((element) => {
-            return allowPushItem(output, constraints, element);
-        });
-        if (fitting < 0) {
-            return null;
-        }
-        else {
-            output.push(copy[fitting]); // Push the fitting item
-            copy.splice(fitting, 1);
-        }
+  stimuli: Array<TItem>,
+  constraints: ConstraintMapping,
+): Array<TItem> | null {
+  let output: Array<TItem> = [];
+  let copy = Array.from(stimuli);
+  while (copy.length > 0) {
+    let fitting = copy.findIndex((element) => {
+      return allowPushItem(output, constraints, element);
+    });
+    if (fitting < 0) {
+      return null;
+    } else {
+      output.push(copy[fitting]); // Push the fitting item
+      copy.splice(fitting, 1);
     }
-    return output;
+  }
+  return output;
 }
 
 /**
@@ -160,50 +155,49 @@ function fixOrderForConstraints<TItem extends ItemType>(
  * failed, in which case an error will have been logged to the console
  */
 function randomizePrivate<TItem extends ItemType>(
-    original_stimuli: Array<TItem>,
-    constraints: ConstraintMapping,
-    nth_try: number,
-    max_tries: number
-) : Array<TItem> | null {
-    if (max_tries < 1) {
-        throw new RangeError("max_tries is < 1");
-    }
-    if (nth_try < 0) {
-        throw new RangeError("nth_try is < 0");
-    }
+  original_stimuli: Array<TItem>,
+  constraints: ConstraintMapping,
+  nth_try: number,
+  max_tries: number,
+): Array<TItem> | null {
+  if (max_tries < 1) {
+    throw new RangeError("max_tries is < 1");
+  }
+  if (nth_try < 0) {
+    throw new RangeError("nth_try is < 0");
+  }
 
-    if (nth_try >= max_tries) {
-        console.error(NOT_SHUFFLED_ERROR_MSG);
-        return null;
-    }
+  if (nth_try >= max_tries) {
+    console.error(NOT_SHUFFLED_ERROR_MSG);
+    return null;
+  }
 
-    let stimuli = Array.from(original_stimuli);
-    let order = [];
-    let item_attempts = 0; // Number of attempts to find a fitting stimulus
+  let stimuli = Array.from(original_stimuli);
+  let order = [];
+  let item_attempts = 0; // Number of attempts to find a fitting stimulus
 
-    // Pick a random fitting input stimulus and append it to the output
-    // until no stimuli are left.
-    while (stimuli.length > 0) {
-        if (item_attempts === stimuli.length * 2) {
-            return randomizePrivate(
-                original_stimuli,
-                constraints,
-                nth_try + 1,
-                max_tries
-            );
-        }
-        let rand_index = Math.floor(Math.random() * stimuli.length);
-        let item = stimuli[rand_index];
-        if (allowPushItem(order, constraints, item)) {
-            order.push(item);                         // push fitting item to output
-            stimuli.splice(rand_index, 1); // and remove it from the input
-            item_attempts = 0;
-        }
-        else {
-            item_attempts += 1;
-        }
+  // Pick a random fitting input stimulus and append it to the output
+  // until no stimuli are left.
+  while (stimuli.length > 0) {
+    if (item_attempts === stimuli.length * 2) {
+      return randomizePrivate(
+        original_stimuli,
+        constraints,
+        nth_try + 1,
+        max_tries,
+      );
     }
-    return order;
+    let rand_index = Math.floor(Math.random() * stimuli.length);
+    let item = stimuli[rand_index];
+    if (allowPushItem(order, constraints, item)) {
+      order.push(item); // push fitting item to output
+      stimuli.splice(rand_index, 1); // and remove it from the input
+      item_attempts = 0;
+    } else {
+      item_attempts += 1;
+    }
+  }
+  return order;
 }
 
 /**
@@ -229,13 +223,13 @@ function randomizePrivate<TItem extends ItemType>(
  * @returns {null|[]} The randomized order. Null if randomization
  * failed, in which case an error will have been logged to the console
  */
-function randomizeStimuli<TItem extends ItemType> (
-    original_stimuli : Array<TItem>,
-    max_same_type: number = 2,
-    type_key:string = 'item_type'
-) : Array<TItem> | null {
-    let constraints = {[type_key] : max_same_type}; // ES6 dependency.
-    return randomizePrivate(original_stimuli, constraints, 0, 10);
+function randomizeStimuli<TItem extends ItemType>(
+  original_stimuli: Array<TItem>,
+  max_same_type: number = 2,
+  type_key: string = "item_type",
+): Array<TItem> | null {
+  let constraints = { [type_key]: max_same_type }; // ES6 dependency.
+  return randomizePrivate(original_stimuli, constraints, 0, 10);
 }
 
 /**
@@ -254,12 +248,12 @@ function randomizeStimuli<TItem extends ItemType> (
  * @returns {null|[]} The randomized order. Null if randomization
  * failed, in which case an error will have been logged to the console
  */
-function randomizeStimuliConstraints<TItem extends ItemType> (
-    original_stimuli: Array<TItem>,
-    constraints: ConstraintMapping = {'item_type' : 2},
-    max_tries = 10
-) : Array<TItem> | null {
-    return randomizePrivate(original_stimuli, constraints, 0, max_tries);
+function randomizeStimuliConstraints<TItem extends ItemType>(
+  original_stimuli: Array<TItem>,
+  constraints: ConstraintMapping = { item_type: 2 },
+  max_tries = 10,
+): Array<TItem> | null {
+  return randomizePrivate(original_stimuli, constraints, 0, max_tries);
 }
 
 /**
@@ -269,15 +263,13 @@ function randomizeStimuliConstraints<TItem extends ItemType> (
  *
  * @return {Array} A shuffled version of the input.
  */
-function randomShuffle<T> (original_stimuli: Array<T>) : Array<T> {
-    let copy = Array.from(original_stimuli);
-    for (let i = 0; i < copy.length; i++) {
-        let swap_index = i + Math.floor(
-            Math.random() * (copy.length - i)
-        );
-        swapItems(copy, i, swap_index);
-    }
-    return copy;
+function randomShuffle<T>(original_stimuli: Array<T>): Array<T> {
+  let copy = Array.from(original_stimuli);
+  for (let i = 0; i < copy.length; i++) {
+    let swap_index = i + Math.floor(Math.random() * (copy.length - i));
+    swapItems(copy, i, swap_index);
+  }
+  return copy;
 }
 
 /**
@@ -299,28 +291,28 @@ function randomShuffle<T> (original_stimuli: Array<T>) : Array<T> {
  *
  * @return {null|Array.<Object>}
  */
-function randomShuffleConstraints<TItem extends ItemType> (
-    original_stimuli: Array<TItem>,
-    constraints: ConstraintMapping = {},
-    max_tries : number = 10
-) : Array<TItem> | null {
-    if (max_tries < 1) {
-        throw new RangeError("max_tries is < 1");
-    }
+function randomShuffleConstraints<TItem extends ItemType>(
+  original_stimuli: Array<TItem>,
+  constraints: ConstraintMapping = {},
+  max_tries: number = 10,
+): Array<TItem> | null {
+  if (max_tries < 1) {
+    throw new RangeError("max_tries is < 1");
+  }
 
-    let output = null;
-    // Randomize stimuli and try to see if we can fix the order,
-    // We break out of the loop after max_tries or a valid input
-    // has been found.
-    for (let i = 0; i < max_tries && output === null; i++) {
-        let copy = randomShuffle(original_stimuli);
-        output = fixOrderForConstraints(copy, constraints);
-    }
-    if (output === null) {
-        console.error(NOT_SHUFFLED_ERROR_MSG);
-    }
+  let output = null;
+  // Randomize stimuli and try to see if we can fix the order,
+  // We break out of the loop after max_tries or a valid input
+  // has been found.
+  for (let i = 0; i < max_tries && output === null; i++) {
+    let copy = randomShuffle(original_stimuli);
+    output = fixOrderForConstraints(copy, constraints);
+  }
+  if (output === null) {
+    console.error(NOT_SHUFFLED_ERROR_MSG);
+  }
 
-    return output;
+  return output;
 }
 
 /**
@@ -329,22 +321,20 @@ function randomShuffleConstraints<TItem extends ItemType> (
  * @param stimuli {Array.<object>}
  * @param constraints {Object}
  */
-function stimuliMeetConstraints<TItem extends ItemType> (
-    stimuli: Array<TItem>,
-    constraints: ConstraintMapping
-) : boolean {
-    let valid = true;
-    stimuli.forEach((element, index, array) => {
-        for (const [key, max] of Object.entries(constraints)) {
-            const subselection = array.slice(
-                Math.max(0, index - max),
-                index
-            );
-            let count = 0;
-            subselection.forEach(item => {count += Number(item[key] === element[key])});
-            if (count >= max)
-                valid = false;
-        }
-    });
-    return valid;
+function stimuliMeetConstraints<TItem extends ItemType>(
+  stimuli: Array<TItem>,
+  constraints: ConstraintMapping,
+): boolean {
+  let valid = true;
+  stimuli.forEach((element, index, array) => {
+    for (const [key, max] of Object.entries(constraints)) {
+      const subselection = array.slice(Math.max(0, index - max), index);
+      let count = 0;
+      subselection.forEach((item) => {
+        count += Number(item[key] === element[key]);
+      });
+      if (count >= max) valid = false;
+    }
+  });
+  return valid;
 }
