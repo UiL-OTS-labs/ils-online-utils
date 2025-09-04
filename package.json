@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "check-format": "prettier . --check",
+    "format": "prettier . --write"
   },
   "devDependencies": {
     "prettier": "3.6.2",
