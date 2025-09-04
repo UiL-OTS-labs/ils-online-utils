@@ -1,0 +1,16 @@
+
+# top-most editor config file
+root = true
+
+# Use linefeeds at the endofline
+[*]
+end_of_line = lf
+charset = utf-8
+indent_style = space
+indent_size = 4
+
+# Use indent of 2 for json files (avoid conflict with tools using indent of 2)
+# most json files are not editted by hand
+
+[*.json]
+indent_size = 2
