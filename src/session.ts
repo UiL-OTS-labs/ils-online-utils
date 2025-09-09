@@ -1,5 +1,5 @@
 /*
- * Session management for jsPsych and UiL-OTS datastore
+ * Session management for UiL-OTS datastore
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import {resolveServer} from "./jspsych-uil-utils.js";
-import {API} from "./libs/api.js";
+// Try to avoid using resolveServer
+// import {resolveServer} from "./jspsych-uil-utils.js";
+import {API} from './api';
 
 export {
     isActive,
@@ -26,31 +27,35 @@ export {
     subjectId
 };
 
-
-var session_id = null;
-var subject_id = null;
+// ToDo: Remove Store this in a Session instance see issue #10
+let session_id: string | null = null;
+var subject_id: string | null = null;
 
 /**
  * Used to check if a session has already started
- * @returns {boolean}
+ * @returns true when a session has started.
  */
-function isActive () {
+function isActive () : boolean{
     return session_id !== null;
 }
 
 /**
  * @callback sessionCallback
- * @param {string} group_name - The name of the target group the participant was assigned to
+ * @param group_name - The name of the target group the participant was assigned to
  */
+type SessionCallbackType = (group_name: string) => void
 
 /**
  * Starts a new participant session on the server
- * @param {string} access_key - Access key for the experiment
- * @param {sessionCallback} callback - Callback function that receives information about the session
+ * @param access_key - Access key for the experiment
+ * @param callback - Callback function that receives information about the session
  */
-function start (access_key, callback) {
+function start (access_key: string, callback: SessionCallbackType) {
     let api = new API(resolveServer());
-    api.sessionStart(access_key).then((data) => {
+
+    // TODO: Make data a Session object here:
+    // eg.: .then(session: Session) => etc. see issue #10
+    api.sessionStart(access_key).then((data: any) => {
         session_id = data.uuid;
         subject_id = data.subject_id;
         callback(data.group_name);
@@ -60,12 +65,12 @@ function start (access_key, callback) {
 /**
  * Uploads data to the server and finalizes a session
  *
- * @param {string} access_key - Access key for the experiment
- * @param {string} data - Data to be sent to the server, in plain text
+ * @param access_key - Access key for the experiment
+ * @param data - Data to be sent to the server, in plain text
  *
- * @returns {Promise<Object>} a promise that contains the parsed JSON returned from the server
+ * @returns a promise that contains the parsed JSON returned from the server
  */
-function upload (access_key, data) {
+function upload (access_key: string, data: string) : Promise<Object> {
     let api = new API(resolveServer());
     if (session_id === null) {
         throw new Error('No active session!');
@@ -79,10 +84,11 @@ function upload (access_key, data) {
  *
  * @returns the subject_id from the data store.
  */
-function subjectId () {
-    if (session_id === null) {
-        throw new Error('No active session')
+function subjectId () : string {
+    if (typeof(session_id) === "string") {
+        return subject_id as string;
     }
-
-    return subject_id;
+    else {
+        throw new Error('No active session');
+    }
 }
