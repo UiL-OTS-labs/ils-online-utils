@@ -17,14 +17,15 @@
  */
 
 // Try to avoid using resolveServer
-// import {resolveServer} from "./jspsych-uil-utils.js";
+import {resolveServer} from "./utils";
 import {API} from './api';
 
 export {
     isActive,
     start,
     upload,
-    subjectId
+    subjectId,
+    _clearGlobalState
 };
 
 // ToDo: Remove Store this in a Session instance see issue #10
@@ -55,11 +56,12 @@ function start (access_key: string, callback: SessionCallbackType) {
 
     // TODO: Make data a Session object here:
     // eg.: .then(session: Session) => etc. see issue #10
-    api.sessionStart(access_key).then((data: any) => {
-        session_id = data.uuid;
-        subject_id = data.subject_id;
-        callback(data.group_name);
-    });
+    api.sessionStart(access_key)
+        .then((data: any) => {
+            session_id = data.uuid;
+            subject_id = data.subject_id;
+            callback(data.group_name);
+        });
 }
 
 /**
@@ -91,4 +93,15 @@ function subjectId () : string {
     else {
         throw new Error('No active session');
     }
+}
+
+/**
+ * clears the global state, this function is mainly to
+ * allow the unit tests to pass.
+ * 
+ * In the future
+ */
+function _clearGlobalState() {
+    session_id = null;
+    subject_id = null;
 }
