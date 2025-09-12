@@ -23,42 +23,39 @@
 // import * as session from "./jspsych-uil-session.js"
 // import * as focus from "./jspsych-uil-focus.js"
 // import {isOnline, getWindow} from './libs/env.js';
-import {API} from "./api";
+import { API } from "./api";
 
-export {
-//    error,
+export //    error,
 //    browser,
 //    randomization,
 //    session,
 //    focus,
-}
+ {};
 
 export {
-//    isOnline,
-//    setAccessKey,
+    //    isOnline,
+    //    setAccessKey,
     useAcceptationServer,
-//    stopIfExperimentClosed,
-//    saveData,
-//    saveJson,
-    resolveServer
-}
-
-
+    //    stopIfExperimentClosed,
+    //    saveData,
+    //    saveJson,
+    resolveServer,
+};
 
 /* ********* constants *********** */
 
 const DATA_STORE_PRODUCTION_SERVER =
-    'https://experiment-datastore.lab.hum.uu.nl/api/';
+    "https://experiment-datastore.lab.hum.uu.nl/api/";
 
 const DATA_STORE_ACCEPTATION_SERVER =
-    'https://experiment-datastore.acc.lab.hum.uu.nl/api/';
+    "https://experiment-datastore.acc.lab.hum.uu.nl/api/";
 
 // const CLOSED_EXPERIMENT_PAGE_LOCATION =
 //     'https://web-experiments.lab.hum.uu.nl/index_files/closed/';
 // const CRITICAL_ERROR_PAGE_LOCATION =
 //     'https://web-experiments.lab.hum.uu.nl/index_files/error/';
 
-const DATA_UPLOAD_ENDPOINT = '/upload/';
+const DATA_UPLOAD_ENDPOINT = "/upload/";
 // const DATA_METADATA_ENDPOINT = '/metadata/';
 
 // Re implement when necessary e.g. create a enum methods for post, get etc.
@@ -80,7 +77,6 @@ let _acc_server = false;
 
 /* ************ private functions ************* */
 
-
 function handleUploadError(args: any) {
     document.body.innerHTML = `
 <div style="margin: 20px">
@@ -93,10 +89,11 @@ function handleUploadError(args: any) {
 </div>
     `;
 
-    let element = document.querySelector('#retry')
+    let element = document.querySelector("#retry");
     if (element instanceof HTMLAnchorElement) {
-        element.addEventListener('click', () => {
-            document.body.innerHTML = '<div style="margin: 20px">Retrying upload...</div>';
+        element.addEventListener("click", () => {
+            document.body.innerHTML =
+                '<div style="margin: 20px">Retrying upload...</div>';
             saveOnDataServer(args.access_key, args.server, args.data);
         });
     }
@@ -110,25 +107,28 @@ function handleUploadError(args: any) {
  * @param server - the server to which the data should be posted.
  * @param data - the research data to send to the datastorage server.
  */
-async function saveOnDataServer(access_key: string, server: string, data: string) {
+async function saveOnDataServer(
+    access_key: string,
+    server: string,
+    data: string,
+) {
     let api = new API(resolveServer());
 
     try {
         let response = await api._post(access_key + DATA_UPLOAD_ENDPOINT, data);
         console.log("Upload status = 200 ", response);
-    }
-    catch (err) {
+    } catch (err) {
         console.error("Error while uploading status", err);
-        handleUploadError({access_key, server, data});
+        handleUploadError({ access_key, server, data });
     }
 }
 
 // ToDo implement this later
-// 
+//
 // interface MetaData {
 //     state: string
 // };
-// 
+//
 // /**
 //  * Loads experiment metadata from the Datastore status API
 //  *
@@ -138,20 +138,20 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //  * @return {Promise}
 //  */
 // function getDatastoreMetadata(access_key: string, server: string) : Promise<MetaData> {
-// 
+//
 //     if (typeof(_datastore_metadata) !== "undefined")
 //         // If we already have the data, return a auto-fulfilling promise
 //         return new Promise((resolve, _) => {resolve(_datastore_metadata);});
-// 
+//
 //     let xhr = new XMLHttpRequest();
-// 
+//
 //     // As this is an async call, we return a promise. That way we can
 //     // actually easily do stuff with the result.
 //     return new Promise((resolve, reject) => {
 //         let url = server + access_key + DATA_METADATA_ENDPOINT;
 //         xhr.open(GET, url);
 //         xhr.responseType = "json";
-// 
+//
 //         xhr.onload = function() {
 //             if(xhr.status === 200){
 //                 _datastore_metadata = xhr.response;
@@ -163,13 +163,13 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //                 reject(new Error(String(xhr.status) + ": " + String(xhr.response)));
 //             }
 //         };
-// 
+//
 //         function onerror() {
 //             reject(new Error("UiL-OTS datastore server is unavailable"));
 //         }
-// 
+//
 //         xhr.onerror = onerror;
-// 
+//
 //         xhr.send();
 //     })
 // }
@@ -189,7 +189,7 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 // function isUUIDFormat(id: string) : boolean {
 //     return id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/) !== null;
 // }
-// 
+//
 // function validateAccessKey(access_key: string) {
 //     if (typeof(access_key) === "undefined") {
 //         // Check if we have a pre-saved access key
@@ -198,20 +198,20 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //             console.error("Function argument access_key is undefined.");
 //             return;
 //         }
-// 
+//
 //         // If we do, use that key
 //         access_key = _access_key;
 //     }
-// 
+//
 //     let is_online = isOnline();
-// 
+//
 //     if (!isUUIDFormat(access_key)) {
 //         let message =
 //             `The access_key ${access_key} is not in a valid format. Please `+
 //             "make sure you have copied it correctly in your experiment. "   +
 //             "It should be 5 groups of characters (0-9 or a-f) with "        +
 //             "8, 4, 4, 4 and 12 characters per group respectively.";
-// 
+//
 //         if (is_online) {
 //             error.scriptError(
 //                 message
@@ -221,7 +221,7 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //             console.log(message);
 //         }
 //     }
-// 
+//
 //     if (access_key === NIL_UUID) {
 //         let message =
 //             `The access_key is "${NIL_UUID}", you should update it.` +
@@ -237,10 +237,9 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //     return access_key;
 // }
 
-
 /* ************ public functions ************** */
 
-// 
+//
 // /**
 //  * Saves an access key to be used with all API related functions as an default.
 //  *
@@ -259,7 +258,7 @@ async function saveOnDataServer(access_key: string, server: string, data: string
 //         console.error("Function argument access_key is undefined.");
 //         return;
 //     }
-// 
+//
 //     _access_key = validateAccessKey(access_key.trim());
 //     return _access_key;
 // }
@@ -270,7 +269,7 @@ async function saveOnDataServer(access_key: string, server: string, data: string
  * Instructs all API methods to use the acceptation datastore server. This can
  * be overriden on a per-call method using the ``acc_server`` parameter;
  */
-function useAcceptationServer () {
+function useAcceptationServer() {
     _acc_server = true;
 }
 
@@ -364,24 +363,24 @@ function useAcceptationServer () {
 //  * resolved Promise is returned
 //  */
 // function saveData (access_key, acc_server = undefined) {
-// 
+//
 //     if (_access_key) {
 //         access_key = _access_key;
 //     }
 //     else {
 //         access_key = setAccessKey(access_key);
 //     }
-// 
+//
 //     if (typeof(access_key) === "undefined") {
 //         console.error("Unable to save without a valid access_key");
 //         return Promise.reject(new Error("Unable to save without a valid access_key"));
 //     }
-// 
+//
 //     let data = jsPsych.data.get().json();
 //     let key = access_key;
 //     let is_online = isOnline();
 //     let server = resolveServer(acc_server);
-// 
+//
 //     if (is_online) {
 //         if (session.isActive()) {
 //             return session.upload(key, data);
@@ -395,7 +394,6 @@ function useAcceptationServer () {
 //         return Promise.resolve();
 //     }
 // }
-
 
 // Implement at a later stage
 //
@@ -417,19 +415,19 @@ function useAcceptationServer () {
 //  * @memberof uil
 //  *
 //  * @returns {Promise| Promise<Object>} a promise that resolves when then
-//  * upload is transferred. In case the saveOnDataServer (no active session) path is 
-//  * chosen, it might also be "resolved" when the "retry" screen is displayed. When 
+//  * upload is transferred. In case the saveOnDataServer (no active session) path is
+//  * chosen, it might also be "resolved" when the "retry" screen is displayed. When
 //  * testing offline a resolved Promise is returned.
 //  */
 // function saveJson (json, access_key, acc_server = undefined) {
-// 
+//
 //     if (_access_key) {
 //         access_key = _access_key;
 //     }
 //     else {
 //         access_key = setAccessKey(access_key);
 //     }
-// 
+//
 //     if (typeof(access_key) === "undefined") {
 //         console.error("Unable to save without a valid access_key");
 //         return;
@@ -437,7 +435,7 @@ function useAcceptationServer () {
 //     let key = access_key;
 //     let is_online = isOnline();
 //     let server = resolveServer(acc_server);
-// 
+//
 //     if (is_online) {
 //         if (session.isActive()) {
 //             return session.upload(key, json);
@@ -452,7 +450,7 @@ function useAcceptationServer () {
 //         // Add preformatted json content.
 //         let pre_element = document.createElement("pre");
 //         pre_element.innerText = json;
-// 
+//
 //         let content = `<!doctype html><html><body><h1>Experiment Data (debug version)</h1>${pre_element.outerHTML}</body></html>`;
 //         let url = URL.createObjectURL(new Blob([content], {type: 'text/html;charset=utf-8'}));
 //         window.open(url);
@@ -460,17 +458,14 @@ function useAcceptationServer () {
 //     }
 // }
 
-
 /**
  * Figures out which server we should be talking to
  */
-function resolveServer (acc_server: boolean | undefined = undefined) {
-    if (typeof(acc_server) === "undefined") {
+function resolveServer(acc_server: boolean | undefined = undefined) {
+    if (typeof acc_server === "undefined") {
         acc_server = _acc_server;
     }
 
-    if (!acc_server)
-        return DATA_STORE_PRODUCTION_SERVER;
-    else
-        return DATA_STORE_ACCEPTATION_SERVER;
+    if (!acc_server) return DATA_STORE_PRODUCTION_SERVER;
+    else return DATA_STORE_ACCEPTATION_SERVER;
 }
