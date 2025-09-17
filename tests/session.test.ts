@@ -1,6 +1,6 @@
 // import {reimport} from "./support/reimport.mjs";
 
-import { expect, describe, it, beforeEach, vi, Mock } from "vitest";
+import { expect, describe, it, test, beforeEach, vi, Mock } from "vitest";
 import * as session from "../src/session";
 
 // Mock fetch to provide instrumented Responses
@@ -54,7 +54,6 @@ describe("session api", () => {
             uuid: "test_session_id",
         };
         const empty_response = JSON.stringify({});
-        const status = { status: 200 };
 
         mockFetch(mock_session);
         mockFetch(empty_response);
@@ -73,11 +72,20 @@ describe("session api", () => {
         expect(session.isActive()).toBeFalsy();
     });
 
-    //
-    //    it('should not fail silently', (done) => {
-    //        mockFetch({}, 400);
-    //        expect(async () => {
-    //            await new Promise((resolve) => session.start(key, resolve));
+    // The it commented out below should be made to work
+    test.todo("It doesn't throw it seems the expect finishes prematurely");
+
+    //    it("should not fail silently", (done) => {
+    //        mockFetchDefault({}, 400);
+    //        function startSession(): Promise<string> {
+    //            return new Promise((resolve, reject) => {
+    //                session.start(key, resolve);
+    //            });
+    //        }
+    //        expect(() => {
+    //            session.start(key, (group) => {
+    //                console.log(`use group ${group}`);
+    //            });
     //        }).toThrow();
     //    });
 
