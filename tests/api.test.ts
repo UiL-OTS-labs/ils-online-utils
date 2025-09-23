@@ -3,13 +3,15 @@ import { API } from "../src/api";
 
 describe("Api Objects", () => {
     let api: API;
+    let host = "https://www.some-host.ils.nl";
 
     beforeEach(() => {
-        api = new API("https://www.some-host.ils.nl");
+        api = new API(host);
     });
 
     test("Can be instantiated", () => {
         expect(api).toBeDefined();
+        expect(api.host).toEqual(new URL(host));
     });
 
     test("Start without a session", () => {
