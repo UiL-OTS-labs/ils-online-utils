@@ -22,6 +22,65 @@ import { API } from "./api";
 
 export { isActive, start, upload, subjectId, _clearGlobalState };
 
+type SessionState = 1 | 2 | 3;
+
+class NotAParticipantSessionError extends Error {
+    constructor() {
+        super(
+            "Trying to create an ParticipantSession from something that doesn't have the required fields",
+        );
+
+        Object.setPrototypeOf(this, NotAParticipantSessionError.prototype);
+    }
+}
+
+export class ParticipantSession {
+    readonly uuid: string;
+    readonly group: string;
+    readonly subject_id: number;
+    readonly state: SessionState;
+
+    private static state_map = new Map<SessionState, string>([
+        [1, "Started"],
+        [2, "Completed"],
+        [3, "Rejected"],
+    ]);
+
+    constructor(
+        uuid: string,
+        state: SessionState,
+        group_name: string,
+        subject_id: number,
+    ) {
+        this.uuid = uuid;
+        this.state = state;
+        this.group = group_name;
+        this.subject_id = subject_id;
+    }
+
+    static fromObject(object: any) {
+        if (
+            "uuid" in object &&
+            "state" in object &&
+            "group_name" in object &&
+            "subject_id" in object
+        ) {
+            return new ParticipantSession(
+                object.uuid,
+                object.state,
+                object.group_name,
+                object.subject_id,
+            );
+        } else {
+            throw Error("Object is not a ParticipantSession");
+        }
+    }
+
+    get state_string() {
+        return ParticipantSession.state_map.get(this.state);
+    }
+}
+
 // ToDo: Remove Store this in a Session instance see issue #10
 let session_id: string | null = null;
 var subject_id: string | null = null;

@@ -23,7 +23,7 @@
 // import * as session from "./jspsych-uil-session.js"
 // import * as focus from "./jspsych-uil-focus.js"
 // import {isOnline, getWindow} from './libs/env.js';
-import { API } from "./api";
+import { NetworkAPI } from "./network";
 
 export //    error,
 //    browser,
@@ -106,16 +106,23 @@ function handleUploadError(args: any) {
  * @param access_key - The key obtain while registering the dataserver
  * @param server - the server to which the data should be posted.
  * @param data - the research data to send to the datastorage server.
+ * @param net_api - The api object that handles the request, if left undefined
+ *                  a default will be chosen that does the right thing.
  */
 async function saveOnDataServer(
     access_key: string,
     server: string,
     data: string,
+    api: NetworkAPI | undefined = undefined,
 ) {
-    let api = new API(resolveServer());
+    let baseurl = resolveServer();
+    if (api == undefined) api = new NetworkAPI();
 
     try {
-        let response = await api._post(access_key + DATA_UPLOAD_ENDPOINT, data);
+        let response = await api.post(
+            baseurl + access_key + DATA_UPLOAD_ENDPOINT,
+            data,
+        );
         console.log("Upload status = 200 ", response);
     } catch (err) {
         console.error("Error while uploading status", err);
