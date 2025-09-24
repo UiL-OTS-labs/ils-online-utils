@@ -72,7 +72,7 @@ export class ParticipantSession {
                 object.subject_id,
             );
         } else {
-            throw Error("Object is not a ParticipantSession");
+            throw new NotAParticipantSessionError();
         }
     }
 
