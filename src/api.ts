@@ -1,5 +1,19 @@
-import { NetworkAPI } from "./network";
+import { NetworkAPI, type MetaData } from "./network";
 import { ParticipantSession } from "./session";
+
+const urls = {
+    meta_data: function (access_key: string) {
+        return `/api/${access_key}/`;
+    },
+    session: {
+        start: function (access_key: string) {
+            return `/api/${access_key}/particpant/`;
+        },
+        upload: function (access_key: string, participant_id: string) {
+            return `/api/${access_key}/upload/${participant_id}/`;
+        },
+    },
+};
 
 /**
  * Class for handling all requests to the experiment-datatstore server
@@ -9,7 +23,6 @@ import { ParticipantSession } from "./session";
  * this class.
  */
 class API {
-    host: URL;
     private _net_api: NetworkAPI;
 
     private cache: { session: ParticipantSession | null; meta_data: null } = {
@@ -21,6 +34,8 @@ class API {
      * Initializes the api connection
      *
      * @param host - base URL for all requests (should include https://)
+     *               unless you specify the net_api parameter, you should
+     *               specify the host.
      * @param net_api - the NetworkAPI instance that handles the communication
      *                  with the dataserver. When left undefined a default
      *                  instance is chozen, which typically does the right
@@ -30,17 +45,20 @@ class API {
         host: URL | string,
         net_api: NetworkAPI | undefined = undefined,
     ) {
-        this.host = new URL(host);
         if (net_api != undefined) {
             this._net_api = net_api;
         } else {
             this._net_api = new NetworkAPI();
+            this.host = host;
         }
     }
 
-    // Concatenates path to host
-    private url(path: string) {
-        return new URL(path, this.host);
+    set host(host: URL | string) {
+        this._net_api.host = host;
+    }
+
+    get host(): URL | string | undefined {
+        return this._net_api.host;
     }
 
     /**
@@ -51,37 +69,64 @@ class API {
     }
 
     /**
-     * ToDo rename to startSession()
      * Start a new participant session on the server
+     *
+     * Requests the server, to start a new ParticipantSession for this user. If
+     * a session already has been started an cached version will be used.
+     *
      * @param access_key - Access key for the experiment
+     *
      * @returns a promise that contains the parsed JSON returned from the server
+     *
+     * @throws HostNotSetError
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set.
+     *
+     * @throws ApiError
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set.
+     *
      */
-    async sessionStart(access_key: string): Promise<ParticipantSession> {
-        // Check whether we've started a session
+    async startSession(access_key: string): Promise<ParticipantSession> {
         if (this.cache.session !== null) {
             return this.cache.session;
         }
 
-        let object = await this._net_api.post(
-            this.url(`${access_key}/participant/`),
+        // This call might throw the specified exceptions
+        let session_data = await this._net_api.startSession(
+            urls.session.start(access_key),
         );
-        return ParticipantSession.fromObject(object);
+
+        return new ParticipantSession(session_data);
     }
 
     /**
-     * Start a new participant session on the server
+     * Upload the data from one session
+     *
      * @param access_key - Access key for the experiment
+     *
+     * @throws {@link HostNotSetError}
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set. This is likely due to a programmer error.
+     *
+     * @throws {@link ApiError}
+     * This is thrown when the request to the server returns an error.
+     *
      * @returns a promise that contains the parsed JSON returned from the server
      */
-    sessionUpload(
+    async sessionUpload(
         access_key: string,
-        session_id: string,
+        session: ParticipantSession,
         data: string,
-    ): Promise<Object> {
-        return this._net_api.post(
-            this.url(`${access_key}/upload/${session_id}/`),
+    ): Promise<void> {
+        return this._net_api.uploadSession(
+            urls.session.upload(access_key, session.uuid),
             data,
         );
+    }
+
+    async metaData(access_key: string): Promise<MetaData> {
+        return this._net_api.metaData(urls.meta_data(access_key));
     }
 }
 

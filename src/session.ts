@@ -19,26 +19,28 @@
 // Try to avoid using resolveServer
 import { resolveServer } from "./utils";
 import { API } from "./api";
+import { type ParticipantSessionData, type SessionState } from "./network";
 
 export { isActive, start, upload, subjectId, _clearGlobalState };
 
-type SessionState = 1 | 2 | 3;
+// To do it isn't used so perhaps remove
+//
+// class NotAParticipantSessionError extends Error {
+//     constructor() {
+//         super(
+//             "Trying to create an ParticipantSession from something that doesn't have the required fields",
+//         );
+//
+//         Object.setPrototypeOf(this, NotAParticipantSessionError.prototype);
+//     }
+// }
 
-class NotAParticipantSessionError extends Error {
-    constructor() {
-        super(
-            "Trying to create an ParticipantSession from something that doesn't have the required fields",
-        );
-
-        Object.setPrototypeOf(this, NotAParticipantSessionError.prototype);
-    }
-}
-
+/**
+ * A participant session is the confirmation of the server that it knows
+ * about a new participant, willing to participant in an experiment.
+ */
 export class ParticipantSession {
-    readonly uuid: string;
-    readonly group: string;
-    readonly subject_id: number;
-    readonly state: SessionState;
+    readonly session_data: ParticipantSessionData;
 
     private static state_map = new Map<SessionState, string>([
         [1, "Started"],
@@ -46,34 +48,23 @@ export class ParticipantSession {
         [3, "Rejected"],
     ]);
 
-    constructor(
-        uuid: string,
-        state: SessionState,
-        group_name: string,
-        subject_id: number,
-    ) {
-        this.uuid = uuid;
-        this.state = state;
-        this.group = group_name;
-        this.subject_id = subject_id;
+    constructor(data: ParticipantSessionData) {
+        this.session_data = data;
     }
 
-    static fromObject(object: any) {
-        if (
-            "uuid" in object &&
-            "state" in object &&
-            "group_name" in object &&
-            "subject_id" in object
-        ) {
-            return new ParticipantSession(
-                object.uuid,
-                object.state,
-                object.group_name,
-                object.subject_id,
-            );
-        } else {
-            throw new NotAParticipantSessionError();
-        }
+    get uuid() {
+        return this.session_data.uuid;
+    }
+
+    get group() {
+        return this.session_data.group;
+    }
+    get subject_id() {
+        return this.session_data.subject_id;
+    }
+
+    get state() {
+        return this.session_data.state;
     }
 
     get state_string() {
@@ -84,6 +75,7 @@ export class ParticipantSession {
 // ToDo: Remove Store this in a Session instance see issue #10
 let session_id: string | null = null;
 var subject_id: string | null = null;
+let session: ParticipantSession | null = null;
 
 /**
  * Used to check if a session has already started
@@ -109,10 +101,9 @@ function start(access_key: string, callback: SessionCallbackType) {
 
     // TODO: Make data a Session object here:
     // eg.: .then(session: Session) => etc. see issue #10
-    api.sessionStart(access_key).then((data: any) => {
-        session_id = data.uuid;
-        subject_id = data.subject_id;
-        callback(data.group_name);
+    api.startSession(access_key).then((data: ParticipantSession) => {
+        session = data;
+        callback(session.group);
     });
 }
 
@@ -124,13 +115,13 @@ function start(access_key: string, callback: SessionCallbackType) {
  *
  * @returns a promise that contains the parsed JSON returned from the server
  */
-function upload(access_key: string, data: string): Promise<Object> {
+function upload(access_key: string, data: string): Promise<void> {
     let api = new API(resolveServer());
-    if (session_id === null) {
+    if (session === null) {
         throw new Error("No active session!");
     }
 
-    return api.sessionUpload(access_key, session_id, data);
+    return api.sessionUpload(access_key, session, data);
 }
 
 /**

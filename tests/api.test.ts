@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { API } from "../src/api";
+import { NetworkAPI } from "../src/network";
 
 describe("Api Objects", () => {
     let api: API;
@@ -17,4 +18,6 @@ describe("Api Objects", () => {
     test("Start without a session", () => {
         expect(api.sessionStarted()).toBeFalsy();
     });
+
+    test("Can start a new ParticipantSesison", () => {});
 });
