@@ -1,98 +1,83 @@
-// import {reimport} from "./support/reimport.mjs";
-
-import { expect, describe, it, test, beforeEach, vi, Mock } from "vitest";
+import { expect, describe, it, test, beforeEach, vi } from "vitest";
 import * as session from "../src/session";
+import { API } from "../src/api";
+import { NetworkAPI, ParticipantSessionData } from "../src/network";
 
-// Mock fetch to provide instrumented Responses
-let fetch: Mock = vi.fn();
+const FAKE_HOST = "https://www.fake.nl";
+const API_KEY = "/api/";
 
-function mockFetch<T>(json: T, status: number = 200) {
-    let response = new Response(JSON.stringify(json), { status: status });
-    fetch.mockReturnValueOnce(
-        Promise.resolve(new Response(JSON.stringify(json), { status: status })),
-    );
-}
+const KEY = "01e6506c-8538-4f83-bb3f-f7cf2ba7f63f";
+const SESSION_UUID = "b76ed785-2b90-4d0a-9c88-47ae917d3d6e";
 
-// The fetch will return this as a default value
-function mockFetchDefault<T>(json: T, status: number = 200) {
-    let response = new Response(JSON.stringify(json), { status: status });
-    fetch.mockReturnValue(
-        Promise.resolve(new Response(JSON.stringify(json), { status: status })),
-    );
-}
+const mock_response: ParticipantSessionData = {
+    uuid: SESSION_UUID,
+    group: "A",
+    subject_id: 1, //"xyz",
+    state: 1,
+};
 
 describe("session api", () => {
-    // beforeEach(async () => {session = await reimport('../jspsych-uil-session.js');});
+    const NetworkAPI = vi.fn(function (host): NetworkAPI {
+        this._host = host;
+    });
+    NetworkAPI.prototype.startSession = vi.fn();
+    NetworkAPI.prototype.uploadSession = vi.fn();
+
+    let mocked_net_api: NetworkAPI;
+
     beforeEach(() => {
         vi.clearAllMocks();
-        session._clearGlobalState();
+        mocked_net_api = new NetworkAPI(FAKE_HOST);
     });
 
-    const key = "01e6506c-8538-4f83-bb3f-f7cf2ba7f63f";
-    const session_uuid = "b76ed785-2b90-4d0a-9c88-47ae917d3d6e";
+    it("should start a session", async () => {
+        vi.mocked(mocked_net_api.startSession).mockReturnValueOnce(
+            Promise.resolve(mock_response),
+        );
 
-    it("should start a session", (done) => {
-        const mock_response = {
-            group_name: "A",
-            subject_id: "xyz",
-            uuid: session_uuid,
-        };
+        // In real use you typically only specify the host.
+        let api = new API(FAKE_HOST, mocked_net_api);
 
-        mockFetch(mock_response, 200);
+        await api
+            .startSession(KEY)
+            .then((session: session.ParticipantSession) => {
+                expect(session.group).toBe("A");
+                expect(session.state).toBe(1);
+                expect(session.state_string).toBe("Started");
+                expect(session.uuid).toBe(
+                    "b76ed785-2b90-4d0a-9c88-47ae917d3d6e",
+                );
+                expect(
+                    vi.mocked(mocked_net_api).startSession,
+                ).toHaveBeenCalledOnce();
+            });
+    });
 
-        session.start(key, (group_name) => {
-            expect(group_name).toBe("A");
-            expect(session.isActive()).toBeTruthy();
-            expect(session.subjectId()).toBe("xyz");
+    it("should upload sessions", async () => {
+        vi.mocked(mocked_net_api.startSession).mockReturnValueOnce(
+            Promise.resolve(mock_response),
+        );
+
+        let api = new API(FAKE_HOST, mocked_net_api);
+        let stored_session = await api.startSession(KEY);
+
+        expect(await api.sessionUpload(KEY, stored_session, "some data"))
+            .toHaveResolved;
+        expect(mocked_net_api.uploadSession).toHaveBeenCalledOnce();
+    });
+
+    it("should not fail silently", async () => {
+        vi.mocked(mocked_net_api.startSession).mockReturnValueOnce(
+            Promise.resolve(mock_response),
+        );
+
+        vi.mocked(mocked_net_api.uploadSession).mockImplementation(() => {
+            throw new Error("Some random error");
         });
-    });
 
-    it("should upload results", (done) => {
-        const mock_session = {
-            group_name: "A",
-            subject_id: "xyz",
-            uuid: "test_session_id",
-        };
-        const empty_response = JSON.stringify({});
+        let api = new API(FAKE_HOST, mocked_net_api);
+        let stored_session = await api.startSession(KEY);
 
-        mockFetch(mock_session);
-        mockFetch(empty_response);
-
-        session.start(key, (group_name) => {
-            expect(group_name).toBe("A");
-            expect(session.isActive()).toBeTruthy();
-            expect(session.subjectId()).toBe("xyz");
-            expect(() => {
-                session.upload(key, { test_data: 1 });
-            }).not.toThrow();
-        });
-    });
-
-    it("reports inactive session when not started", () => {
-        expect(session.isActive()).toBeFalsy();
-    });
-
-    // The it commented out below should be made to work
-    test.todo("It doesn't throw it seems the expect finishes prematurely");
-
-    //    it("should not fail silently", (done) => {
-    //        mockFetchDefault({}, 400);
-    //        function startSession(): Promise<string> {
-    //            return new Promise((resolve, reject) => {
-    //                session.start(key, resolve);
-    //            });
-    //        }
-    //        expect(() => {
-    //            session.start(key, (group) => {
-    //                console.log(`use group ${group}`);
-    //            });
-    //        }).toThrow();
-    //    });
-
-    it("fails to upload without a session", async () => {
-        mockFetch({}, 200);
-        expect(() => {
-            session.upload(key, {});
-        }).toThrow();
+        expect(await api.sessionUpload(KEY, stored_session, "")).toThrow();
     });
 });

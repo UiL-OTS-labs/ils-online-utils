@@ -9,6 +9,13 @@ class HostNotSetError extends Error {
     }
 }
 
+// Typescript enums are problematic
+// export enum SessionState {
+//     STARTED = 1,
+//     COMPLETED,
+//     REJECTED,
+// }
+// I would have like the enum above.
 export type SessionState = 1 | 2 | 3;
 
 export interface ParticipantSessionData {
@@ -92,7 +99,7 @@ class NetworkAPI {
      *
      * @returns - a promise that contains the HttpResponse of the server
      */
-    private request(
+    request(
         url: URL | string,
         method: Method,
         data: string = "",
