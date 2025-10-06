@@ -1,20 +1,6 @@
 import { NetworkAPI, type MetaData } from "./network";
 import { ParticipantSession } from "./session";
 
-const urls = {
-    meta_data: function (access_key: string) {
-        return `/api/${access_key}/`;
-    },
-    session: {
-        start: function (access_key: string) {
-            return `/api/${access_key}/particpant/`;
-        },
-        upload: function (access_key: string, participant_id: string) {
-            return `/api/${access_key}/upload/${participant_id}/`;
-        },
-    },
-};
-
 /**
  * Class for handling all requests to the experiment-datatstore server
  *
@@ -36,36 +22,35 @@ class API {
      * @param host - base URL for all requests (should include https://)
      *               unless you specify the net_api parameter, you should
      *               specify the host.
+     * @param access_key - The access key that belongs to the experiment with
+     *                     whom we like to communicate.
      * @param net_api - the NetworkAPI instance that handles the communication
      *                  with the dataserver. When left undefined a default
      *                  instance is chozen, which typically does the right
-     *                  thing.
+     *                  thing. Than parameters will of host and access_key
+     *                  will be unused.
      */
-    constructor(
-        host: URL | string,
-        net_api: NetworkAPI | undefined = undefined,
-    ) {
+    constructor(host: URL | string, access_key: string, net_api?: NetworkAPI) {
         if (net_api != undefined) {
             this._net_api = net_api;
         } else {
-            this._net_api = new NetworkAPI();
-            this.host = host;
+            this._net_api = new NetworkAPI(host, access_key);
         }
     }
 
-    set host(host: URL | string) {
-        this._net_api.host = host;
+    get host() {
+        return this._net_api.host;
     }
 
-    get host(): URL | string | undefined {
-        return this._net_api.host;
+    get access_key() {
+        return this._net_api.access_key;
     }
 
     /**
      * Check whether the session has been started
      */
     sessionStarted() {
-        return this.cache.session !== null;
+        return this.cache.session != null;
     }
 
     /**
@@ -87,15 +72,13 @@ class API {
      * This might be raised when it isn't set.
      *
      */
-    async startSession(access_key: string): Promise<ParticipantSession> {
-        if (this.cache.session !== null) {
+    async startSession(): Promise<ParticipantSession> {
+        if (this.cache.session != null) {
             return this.cache.session;
         }
 
         // This call might throw the specified exceptions
-        let session_data = await this._net_api.startSession(
-            urls.session.start(access_key),
-        );
+        let session_data = await this._net_api.startSession();
 
         return new ParticipantSession(session_data);
     }
@@ -115,18 +98,14 @@ class API {
      * @returns a promise that contains the parsed JSON returned from the server
      */
     async sessionUpload(
-        access_key: string,
         session: ParticipantSession,
         data: string,
     ): Promise<void> {
-        return this._net_api.uploadSession(
-            urls.session.upload(access_key, session.uuid),
-            data,
-        );
+        return this._net_api.uploadSession(session, data);
     }
 
-    async metaData(access_key: string): Promise<MetaData> {
-        return this._net_api.metaData(urls.meta_data(access_key));
+    async metaData(): Promise<MetaData> {
+        return this._net_api.metaData();
     }
 }
 

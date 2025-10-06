@@ -1,6 +1,21 @@
 import { type Method } from "./method";
+import { type ParticipantSession } from "./session";
 
 export { NetworkAPI };
+
+const urls = {
+    meta_data: function (access_key: string) {
+        return `/api/${access_key}/`;
+    },
+    session: {
+        start: function (access_key: string) {
+            return `/api/${access_key}/particpant/`;
+        },
+        upload: function (access_key: string, participant_id: string) {
+            return `/api/${access_key}/upload/${participant_id}/`;
+        },
+    },
+};
 
 class HostNotSetError extends Error {
     constructor() {
@@ -75,20 +90,20 @@ export class ApiError extends Error {
  * Class for handling all requests to the server
  */
 class NetworkAPI {
-    _host: URL | undefined;
+    private _host: URL;
+    private _access_key: string;
 
-    constructor(host: string | URL | undefined = undefined) {
-        if (host) {
-            this._host = new URL(host);
-        }
+    constructor(host: string | URL, access_key: string) {
+        this._host = new URL(host);
+        this._access_key = access_key;
     }
 
-    set host(hostname: URL | string) {
-        this._host = new URL(hostname);
-    }
-
-    get host(): URL | undefined {
+    get host() {
         return this._host;
+    }
+
+    get access_key() {
+        return this._access_key;
     }
 
     /**
@@ -171,18 +186,24 @@ class NetworkAPI {
         return this.request(url, "POST", data);
     }
 
-    async startSession(endpoint: string): Promise<ParticipantSessionData> {
-        let response = await this.post(endpoint);
+    async startSession(): Promise<ParticipantSessionData> {
+        const url = urls.session.start(this.access_key);
+        let response = await this.post(url);
         return await response.json();
     }
 
-    async uploadSession(endpoint: string, data: string): Promise<void> {
-        let response = await this.post(endpoint, data);
+    async uploadSession(
+        session: ParticipantSession,
+        data: string,
+    ): Promise<void> {
+        const url = urls.session.upload(this.access_key, session.uuid);
+        let response = await this.post(url, data);
         console.assert(response.ok);
     }
 
-    async metaData(endpoint: string): Promise<MetaData> {
-        let response = await this.get(endpoint);
+    async metaData(): Promise<MetaData> {
+        const url = urls.meta_data(this.access_key);
+        let response = await this.get(url);
         return await response.json();
     }
 }
