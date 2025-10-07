@@ -104,6 +104,11 @@ class API {
         return this._net_api.uploadSession(session, data);
     }
 
+    /**
+     * retrieve the meta data of this experiment from the dataserver.
+     *
+     * @returns a promise with the metadata
+     */
     async metaData(): Promise<MetaData> {
         return this._net_api.metaData();
     }

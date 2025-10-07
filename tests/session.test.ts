@@ -17,8 +17,9 @@ const mock_response: ParticipantSessionData = {
 };
 
 describe("session api", () => {
-    const NetworkAPI = vi.fn(function (host): NetworkAPI {
+    const NetworkAPI = vi.fn(function (host, access_key): NetworkAPI {
         this._host = host;
+        this._access_key = access_key;
     });
     NetworkAPI.prototype.startSession = vi.fn();
     NetworkAPI.prototype.uploadSession = vi.fn();
@@ -27,7 +28,7 @@ describe("session api", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mocked_net_api = new NetworkAPI(FAKE_HOST);
+        mocked_net_api = new NetworkAPI(FAKE_HOST, KEY);
     });
 
     it("should start a session", async () => {
@@ -36,21 +37,17 @@ describe("session api", () => {
         );
 
         // In real use you typically only specify the host.
-        let api = new API(FAKE_HOST, mocked_net_api);
+        let api = new API(FAKE_HOST, KEY, mocked_net_api);
 
-        await api
-            .startSession(KEY)
-            .then((session: session.ParticipantSession) => {
-                expect(session.group).toBe("A");
-                expect(session.state).toBe(1);
-                expect(session.state_string).toBe("Started");
-                expect(session.uuid).toBe(
-                    "b76ed785-2b90-4d0a-9c88-47ae917d3d6e",
-                );
-                expect(
-                    vi.mocked(mocked_net_api).startSession,
-                ).toHaveBeenCalledOnce();
-            });
+        await api.startSession().then((session: session.ParticipantSession) => {
+            expect(session.group).toBe("A");
+            expect(session.state).toBe(1);
+            expect(session.state_string).toBe("Started");
+            expect(session.uuid).toBe("b76ed785-2b90-4d0a-9c88-47ae917d3d6e");
+            expect(
+                vi.mocked(mocked_net_api).startSession,
+            ).toHaveBeenCalledOnce();
+        });
     });
 
     it("should upload sessions", async () => {
@@ -58,10 +55,10 @@ describe("session api", () => {
             Promise.resolve(mock_response),
         );
 
-        let api = new API(FAKE_HOST, mocked_net_api);
-        let stored_session = await api.startSession(KEY);
+        let api = new API(FAKE_HOST, KEY, mocked_net_api);
+        let stored_session = await api.startSession();
 
-        expect(await api.sessionUpload(KEY, stored_session, "some data"))
+        expect(await api.sessionUpload(stored_session, "some data"))
             .toHaveResolved;
         expect(mocked_net_api.uploadSession).toHaveBeenCalledOnce();
     });
@@ -71,13 +68,15 @@ describe("session api", () => {
             Promise.resolve(mock_response),
         );
 
-        vi.mocked(mocked_net_api.uploadSession).mockImplementation(() => {
+        vi.mocked(mocked_net_api.uploadSession).mockImplementation(async () => {
             throw new Error("Some random error");
         });
 
-        let api = new API(FAKE_HOST, mocked_net_api);
-        let stored_session = await api.startSession(KEY);
+        let api = new API(FAKE_HOST, KEY, mocked_net_api);
+        let stored_session = await api.startSession();
 
-        expect(await api.sessionUpload(KEY, stored_session, "")).toThrow();
+        await expect(() =>
+            api.sessionUpload(stored_session, ""),
+        ).rejects.toThrowError("Some random error");
     });
 });
