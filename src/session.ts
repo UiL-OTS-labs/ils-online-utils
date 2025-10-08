@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-import { type ParticipantSessionData, type SessionState } from "./network";
+import { type ParticipantSessionData, type SessionState } from "./dsrestapi";
 
 // To do it isn't used so perhaps remove
 //

@@ -1,4 +1,4 @@
-import { NetworkAPI, type MetaData } from "./network";
+import { DSRestAPI, type MetaData } from "./dsrestapi";
 import { ParticipantSession } from "./session";
 
 /**
@@ -9,7 +9,7 @@ import { ParticipantSession } from "./session";
  * this class.
  */
 class API {
-    private _net_api: NetworkAPI;
+    private _net_api: DSRestAPI;
 
     private cache: { session: ParticipantSession | null; meta_data: null } = {
         session: null,
@@ -24,17 +24,17 @@ class API {
      *               specify the host.
      * @param access_key - The access key that belongs to the experiment with
      *                     whom we like to communicate.
-     * @param net_api - the NetworkAPI instance that handles the communication
+     * @param net_api - the DSRestAPI instance that handles the communication
      *                  with the dataserver. When left undefined a default
      *                  instance is chozen, which typically does the right
      *                  thing. Than parameters will of host and access_key
      *                  will be unused.
      */
-    constructor(host: URL | string, access_key: string, net_api?: NetworkAPI) {
+    constructor(host: URL | string, access_key: string, net_api?: DSRestAPI) {
         if (net_api != undefined) {
             this._net_api = net_api;
         } else {
-            this._net_api = new NetworkAPI(host, access_key);
+            this._net_api = new DSRestAPI(host, access_key);
         }
     }
 

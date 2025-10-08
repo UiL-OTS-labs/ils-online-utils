@@ -1,7 +1,7 @@
 import { expect, describe, it, test, beforeEach, vi } from "vitest";
 import * as session from "../src/session";
 import { API } from "../src/api";
-import { NetworkAPI, ParticipantSessionData } from "../src/network";
+import { DSRestAPI, ParticipantSessionData } from "../src/dsrestapi";
 
 const FAKE_HOST = "https://www.fake.nl";
 const API_KEY = "/api/";
@@ -17,18 +17,18 @@ const mock_response: ParticipantSessionData = {
 };
 
 describe("session api", () => {
-    const NetworkAPI = vi.fn(function (host, access_key): NetworkAPI {
+    const DSRestAPI = vi.fn(function (host, access_key): DSRestAPI {
         this._host = host;
         this._access_key = access_key;
     });
-    NetworkAPI.prototype.startSession = vi.fn();
-    NetworkAPI.prototype.uploadSession = vi.fn();
+    DSRestAPI.prototype.startSession = vi.fn();
+    DSRestAPI.prototype.uploadSession = vi.fn();
 
-    let mocked_net_api: NetworkAPI;
+    let mocked_net_api: DSRestAPI;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mocked_net_api = new NetworkAPI(FAKE_HOST, KEY);
+        mocked_net_api = new DSRestAPI(FAKE_HOST, KEY);
     });
 
     it("should start a session", async () => {

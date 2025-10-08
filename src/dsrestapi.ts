@@ -1,7 +1,7 @@
 import { type Method } from "./method";
 import { type ParticipantSession } from "./session";
 
-export { NetworkAPI };
+export { DSRestAPI };
 
 const urls = {
     meta_data: function (access_key: string) {
@@ -89,7 +89,7 @@ export class ApiError extends Error {
 /**
  * Class for handling all requests to the server
  */
-class NetworkAPI {
+class DSRestAPI {
     private _host: URL;
     private _access_key: string;
 

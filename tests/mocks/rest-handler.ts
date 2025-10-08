@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { MetaData, ParticipantSessionData } from "../../src/network";
+import { MetaData, ParticipantSessionData } from "../../src/dsrestapi";
 
 export const mock_host = "https://mock-rest-domain.com";
 export const mock_access_key = "mock_access_key";

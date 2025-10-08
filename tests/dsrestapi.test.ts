@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { NetworkAPI, ParticipantSessionData } from "../src/network";
+import { DSRestAPI, ParticipantSessionData } from "../src/dsrestapi";
 
 // It would be able to
 import { server } from "./mocks/node";
@@ -11,17 +11,17 @@ import {
 } from "./mocks/rest-handler";
 import { ParticipantSession } from "../src/session";
 
-describe("NetworkAPI objects", () => {
+describe("DSRestAPI objects", () => {
     test("Can be created", () => {
-        let net_api = new NetworkAPI(mock_host);
+        let net_api = new DSRestAPI(mock_host);
         expect(net_api).toBeDefined();
     });
 });
 
-describe("NetworkAPI objects query the right endpoints", () => {
+describe("DSRestAPI objects query the right endpoints", () => {
     const endpoint = "api/";
 
-    let net_api = new NetworkAPI(mock_host, mock_access_key);
+    let net_api = new DSRestAPI(mock_host, mock_access_key);
 
     beforeEach(() => {
         server.listen();

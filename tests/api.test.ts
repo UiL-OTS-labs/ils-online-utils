@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { API } from "../src/api";
-import { NetworkAPI } from "../src/network";
+import { DSRestAPI } from "../src/dsrestapi";
 
 describe("Api Objects", () => {
     let api: API;
