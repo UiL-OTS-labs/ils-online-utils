@@ -1,123 +1,122 @@
-/**
- * type for http request methods
- */
-type Method =
-    | "CONNECT"
-    | "DELETE"
-    | "GET"
-    | "HEAD"
-    | "OPTIONS"
-    | "PATCH"
-    | "POST"
-    | "PUT"
-    | "TRACE";
+import { DSRestAPI, type MetaData } from "./dsrestapi";
+import { ParticipantSession } from "./session";
 
 /**
- * Class for handling all requests to the server
+ * Class for handling all requests to the experiment-datatstore server
+ *
+ * This class handles the communication with the experiment-datastore server. So
+ * if you want to send/retrieve information from the server, you'll should be using
+ * this class.
  */
 class API {
-    host: URL;
+    private priv_api: DSRestAPI;
+
+    private cache: { session: ParticipantSession | null; meta_data: null } = {
+        session: null,
+        meta_data: null,
+    };
+
     /**
      * Initializes the api connection
+     *
      * @param host - base URL for all requests (should include https://)
+     *               unless you specify the net_api parameter, you should
+     *               specify the host.
+     * @param access_key - The access key that belongs to the experiment with
+     *                     whom we like to communicate.
+     * @param net_api - the DSRestAPI instance that handles the communication
+     *                  with the dataserver. When left undefined a default
+     *                  instance is chozen, which typically does the right
+     *                  thing. Than parameters will of host and access_key
+     *                  will be unused.
      */
-    constructor(host: URL | string) {
-        this.host = new URL(host);
+    constructor(host: URL | string, access_key: string, net_api?: DSRestAPI) {
+        if (net_api != undefined) {
+            this.priv_api = net_api;
+        } else {
+            if (typeof host != "string" && !(host instanceof URL)) {
+                throw TypeError("Host should be URL|string");
+            }
+            if (typeof access_key != "string") {
+                throw TypeError("acces_key should be string");
+            }
+            this.priv_api = new DSRestAPI(host, access_key);
+        }
+    }
+
+    get host() {
+        return this.priv_api.host;
+    }
+
+    get access_key() {
+        return this.priv_api.access_key;
     }
 
     /**
-     * Performs a request
-     * @param url - URL for the request, relative to the base URL used when initializing the API class
-     * @param method - HTTP method (e.g. GET/POS)
-     * @param data - Data to be sent to the server, in plain text
-     * @returns {Promise<Object>} a promise that contains the parsed JSON returned from the server
+     * Check whether the session has been started
      */
-    _request(
-        url: URL | string,
-        method: Method,
-        data: string = "",
-    ): Promise<Object> {
-        const retries = 5;
-        let sleep = 500;
-        let params = {
-            method: method,
-            body:
-                data.length > 0
-                    ? new Blob([data], { type: "text/plain" })
-                    : undefined,
-        };
-        return new Promise(async (resolve, reject) => {
-            let response = null;
-            let error_save;
-            for (let i = 0; i < retries; i++) {
-                try {
-                    response = await fetch(new URL(url, this.host), params);
-                    break;
-                } catch (error) {
-                    // sleep for a bit
-                    error_save = error;
-                    await new Promise((r) => setTimeout(r, sleep));
-                    sleep *= 2;
-                }
-            }
-
-            if (response == null) {
-                // out of retries
-                reject(error_save);
-                return;
-            }
-
-            if (response.ok) {
-                resolve(await response.json());
-            } else {
-                try {
-                    reject(await response.json());
-                } catch {
-                    reject(await response.text());
-                }
-            }
-        });
-    }
-
-    /**
-     * Performs an HTTP GET request
-     * @param url - URL for the request, relative to the base URL used when initializing the API class
-     * @returns a promise that contains the parsed JSON returned from the server
-     */
-    _get(url: URL | string): Promise<Object> {
-        return this._request(url, "GET", undefined);
-    }
-
-    /**
-     * Performs an HTTP POST request
-     * @param url - URL for the request, relative to the base URL used when initializing the API class
-     * @param data - Data to be sent to the server, in plain text
-     * @returns {Promise<Object>} a promise that contains the parsed JSON returned from the server
-     */
-    _post(url: URL | string, data: string = ""): Promise<Object> {
-        return this._request(url, "POST", data);
+    sessionStarted() {
+        return this.cache.session != null;
     }
 
     /**
      * Start a new participant session on the server
+     *
+     * Requests the server, to start a new ParticipantSession for this user. If
+     * a session already has been started an cached version will be used.
+     *
      * @param access_key - Access key for the experiment
-     * @returns {Promise<Object>} a promise that contains the parsed JSON returned from the server
+     *
+     * @returns a promise that contains the parsed JSON returned from the server
+     *
+     * @throws HostNotSetError
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set.
+     *
+     * @throws ApiError
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set.
+     *
      */
-    sessionStart(access_key: string): Promise<Object> {
-        return this._post(`${access_key}/participant/`);
+    async startSession(): Promise<ParticipantSession> {
+        if (this.cache.session != null) {
+            return this.cache.session;
+        }
+
+        // This call might throw the specified exceptions
+        let session_data = await this.priv_api.startSession();
+
+        return new ParticipantSession(session_data);
     }
 
     /**
-     * Start a new participant session on the server
+     * Upload the data from one session
+     *
      * @param access_key - Access key for the experiment
+     *
+     * @throws {@link HostNotSetError}
+     * When the Api object is created the host (of the dataserver) should be set
+     * This might be raised when it isn't set. This is likely due to a programmer error.
+     *
+     * @throws {@link ApiError}
+     * This is thrown when the request to the server returns an error.
+     *
      * @returns a promise that contains the parsed JSON returned from the server
      */
-    sessionUpload(
-        access_key: string,
-        session_id: string,
+    async sessionUpload(
+        session: ParticipantSession,
         data: string,
-    ): Promise<Object> {
-        return this._post(`${access_key}/upload/${session_id}/`, data);
+    ): Promise<void> {
+        return this.priv_api.uploadSession(session, data);
+    }
+
+    /**
+     * retrieve the meta data of this experiment from the dataserver.
+     *
+     * @returns a promise with the metadata
+     */
+    async metaData(): Promise<MetaData> {
+        return this.priv_api.metaData();
     }
 }
 
