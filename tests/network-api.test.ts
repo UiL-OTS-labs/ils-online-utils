@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { NetworkAPI } from "../src/network";
+import { NetworkAPI, ParticipantSessionData } from "../src/network";
 
 // It would be able to
 import { server } from "./mocks/node";
-import { mock_host } from "./mocks/rest-handler";
+import {
+    mock_host,
+    mock_access_key,
+    mock_meta_data,
+    mock_session,
+} from "./mocks/rest-handler";
+import { ParticipantSession } from "../src/session";
 
 describe("NetworkAPI objects", () => {
     test("Can be created", () => {
@@ -15,7 +21,7 @@ describe("NetworkAPI objects", () => {
 describe("NetworkAPI objects query the right endpoints", () => {
     const endpoint = "api/";
 
-    let net_api = new NetworkAPI(mock_host);
+    let net_api = new NetworkAPI(mock_host, mock_access_key);
 
     beforeEach(() => {
         server.listen();
@@ -26,23 +32,27 @@ describe("NetworkAPI objects query the right endpoints", () => {
         server.close();
     });
 
-    test("GET requests go to right endpoint", async () => {
-        let result = await net_api.get(endpoint);
-
-        expect("get_request" in result);
-        // make typescript happy, but there must be a better way
-        if ("get_request" in result) {
-            expect(result.get_request).toBeTruthy();
-        }
+    test("metadata requests go to right url", async () => {
+        let result = await net_api.metaData();
+        expect(result.state).toEqual(mock_meta_data.state);
     });
 
-    test("POST requests go to right endpoint", async () => {
-        let result = await net_api.post(endpoint);
+    test("Session requests go to right url", async () => {
+        let result = await net_api.startSession();
+        expect(result.group).toEqual(mock_session.group);
+        expect(result.uuid).toEqual(mock_session.uuid);
+        expect(result.state).toEqual(mock_session.state);
+        expect(result.subject_id).toEqual(mock_session.subject_id);
+    });
 
-        expect("post_request" in result);
-        // make typescript happy, but there must be a better way
-        if ("post_request" in result) {
-            expect(result.post_request).toBeTruthy();
-        }
+    test("Uploads go to right url", async () => {
+        const session_data: ParticipantSessionData = {
+            uuid: "some-uuid",
+            group: "some-group",
+            subject_id: 2,
+            state: 1,
+        };
+        const session = new ParticipantSession(session_data);
+        expect(net_api.uploadSession(session, "some-data")).resolves;
     });
 });

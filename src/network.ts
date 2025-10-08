@@ -9,7 +9,7 @@ const urls = {
     },
     session: {
         start: function (access_key: string) {
-            return `/api/${access_key}/particpant/`;
+            return `/api/${access_key}/participant/`;
         },
         upload: function (access_key: string, participant_id: string) {
             return `/api/${access_key}/upload/${participant_id}/`;
