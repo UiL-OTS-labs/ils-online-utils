@@ -9,7 +9,7 @@ import { ParticipantSession } from "./session";
  * this class.
  */
 class API {
-    private _net_api: DSRestAPI;
+    private priv_api: DSRestAPI;
 
     private cache: { session: ParticipantSession | null; meta_data: null } = {
         session: null,
@@ -32,18 +32,24 @@ class API {
      */
     constructor(host: URL | string, access_key: string, net_api?: DSRestAPI) {
         if (net_api != undefined) {
-            this._net_api = net_api;
+            this.priv_api = net_api;
         } else {
-            this._net_api = new DSRestAPI(host, access_key);
+            if (typeof host != "string" && !(host instanceof URL)) {
+                throw TypeError("Host should be URL|string");
+            }
+            if (typeof access_key != "string") {
+                throw TypeError("acces_key should be string");
+            }
+            this.priv_api = new DSRestAPI(host, access_key);
         }
     }
 
     get host() {
-        return this._net_api.host;
+        return this.priv_api.host;
     }
 
     get access_key() {
-        return this._net_api.access_key;
+        return this.priv_api.access_key;
     }
 
     /**
@@ -78,7 +84,7 @@ class API {
         }
 
         // This call might throw the specified exceptions
-        let session_data = await this._net_api.startSession();
+        let session_data = await this.priv_api.startSession();
 
         return new ParticipantSession(session_data);
     }
@@ -101,7 +107,7 @@ class API {
         session: ParticipantSession,
         data: string,
     ): Promise<void> {
-        return this._net_api.uploadSession(session, data);
+        return this.priv_api.uploadSession(session, data);
     }
 
     /**
@@ -110,7 +116,7 @@ class API {
      * @returns a promise with the metadata
      */
     async metaData(): Promise<MetaData> {
-        return this._net_api.metaData();
+        return this.priv_api.metaData();
     }
 }
 
