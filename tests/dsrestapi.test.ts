@@ -13,15 +13,15 @@ import { ParticipantSession } from "../src/session";
 
 describe("DSRestAPI objects", () => {
     test("Can be created", () => {
-        let net_api = new DSRestAPI(mock_host);
-        expect(net_api).toBeDefined();
+        let rest_api = new DSRestAPI(mock_host, mock_access_key);
+        expect(rest_api).toBeDefined();
     });
 });
 
 describe("DSRestAPI objects query the right endpoints", () => {
     const endpoint = "api/";
 
-    let net_api = new DSRestAPI(mock_host, mock_access_key);
+    let rest_api = new DSRestAPI(mock_host, mock_access_key);
 
     beforeEach(() => {
         server.listen();
@@ -33,12 +33,12 @@ describe("DSRestAPI objects query the right endpoints", () => {
     });
 
     test("metadata requests go to right url", async () => {
-        let result = await net_api.metaData();
+        let result = await rest_api.metaData();
         expect(result.state).toEqual(mock_meta_data.state);
     });
 
     test("Session requests go to right url", async () => {
-        let result = await net_api.startSession();
+        let result = await rest_api.startSession();
         expect(result.group).toEqual(mock_session.group);
         expect(result.uuid).toEqual(mock_session.uuid);
         expect(result.state).toEqual(mock_session.state);
@@ -53,6 +53,6 @@ describe("DSRestAPI objects query the right endpoints", () => {
             state: 1,
         };
         const session = new ParticipantSession(session_data);
-        expect(net_api.uploadSession(session, "some-data")).resolves;
+        expect(rest_api.uploadSession(session, "some-data")).resolves;
     });
 });
